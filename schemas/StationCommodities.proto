@@ -1,0 +1,31 @@
+import "ApplicationIdentifier.proto";
+
+message StationCommodities {
+    required int64 timestamp = 1;
+    optional ApplicationIdentifier application = 2;
+    required string system = 3;
+    required string station = 4;
+
+    message Commodity {
+        enum Operation {
+            UPDATE = 0;
+            ADD = 1;
+            REMOVE = 2;
+        }
+        optional Operation operation = 1 [default = UPDATE];
+        required string item_name = 2;
+        optional uint32 buy_price = 3;
+        optional uint32 sell_price = 4;
+        optional uint32 station_stock = 5;
+        optional uint32 station_demand = 6;
+
+        enum MarketLevel {
+            LOW = 0;
+            MEDIUM = 1;
+            HIGH = 2;
+        }
+        optional MarketLevel supply_level = 7;
+        optional MarketLevel demand_level = 8;
+        optional bool illegal = 9;
+    }
+}
