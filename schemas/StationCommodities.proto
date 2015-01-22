@@ -1,18 +1,23 @@
 import "ApplicationIdentifier.proto";
 
 message StationCommodities {
-    required int64 timestamp = 1;
-    optional ApplicationIdentifier application = 2;
-    required string system = 3;
-    required string station = 4;
+    required int64 timestamp = 1; //Unix time of update
+    optional ApplicationIdentifier application = 2; //Application identification and optional signing information
+    required string system = 3; //System of updated station
+    required string station = 4; //Station name within the system
 
-    message Commodity {
+    message CommodityInfo {
+        /*
+        Note that all the only required field in this is the item name. The data provided SHOULD
+        be merged with stored data. If a REMOVE operation is issued, the rest of the fields are ignored.
+        ADD SHOULD have no effect if the commodity already exists in an archive.
+        */
         enum Operation {
             UPDATE = 0;
             ADD = 1;
             REMOVE = 2;
         }
-        optional Operation operation = 1 [default = UPDATE];
+        optional Operation operation = 1 [default = UPDATE]; //Operation on a commodity
         required string item_name = 2;
         optional uint32 buy_price = 3;
         optional uint32 sell_price = 4;
@@ -28,4 +33,6 @@ message StationCommodities {
         optional MarketLevel demand_level = 8;
         optional bool illegal = 9;
     }
+
+    repeated CommodityInfo commodities = 5; //Array of commodity updates
 }
