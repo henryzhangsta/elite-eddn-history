@@ -59,5 +59,5 @@ if __name__ == '__main__':
 
     eddn.Listen(write, length)
 
-    while input():
-        pass
+    while True:
+        raw_input()
