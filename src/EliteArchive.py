@@ -5,11 +5,19 @@ from google.protobuf.text_format import PrintMessage
 from dateutil.parser import parse as ParseDate
 from dateutil.tz import tzutc
 from pymongo import MongoClient
-import zlib, datetime, sys
+from bson import Binary
+import zlib, datetime, sys, time
 
-def GetUnixTime(dt):
+def GetEpochUnixTime():
     epoch = datetime.datetime.utcfromtimestamp(0)
     epoch = epoch.replace(tzinfo=tzutc())
+    return epoch
+
+def GetCurrentUnixTime():
+    return int(time.time() * 1000.0)
+
+def GetUnixTime(dt):
+    epoch = GetEpochUnixTime()
 
     if not dt.tzinfo:
         dt = dt.replace(tzinfo=tzutc())
@@ -53,11 +61,11 @@ col_commodities = db.station_commodities
 def InsertCommodityUpdate(data):
     return col_updates.insert({
         'timestamp': data.timestamp,
-        'payload': data.SerializeToString()
+        'payload': Binary(data.SerializeToString())
     })
 
 def GetCommodityUpdatesSince(timestamp):
-    return [col_updates.find({'timestamp': {'$gt': timestamp}})]
+    return [x['payload'] for x in col_updates.find({'timestamp': {'$gt': timestamp}})]
 
 if __name__ == '__main__':
     eddn = EDDNClient()
@@ -74,5 +82,23 @@ if __name__ == '__main__':
 
     eddn.Listen(write, length)
 
+    timestamp = 0
     while True:
-        raw_input()
+        line = raw_input()
+        try:
+            if len(line):
+                timestamp = int(line)
+            
+            print 'timestamp: %d' % timestamp
+            updates = GetCommodityUpdatesSince(timestamp)
+            for u in updates:
+                a = StationCommodities()
+                a.ParseFromString(u)
+                print a
+
+            if not len(line):
+                timestamp = GetCurrentUnixTime()
+
+        except Exception as e:
+            print e
+
