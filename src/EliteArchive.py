@@ -4,6 +4,7 @@ from schemas import ApplicationIdentifier, StationCommodities
 from google.protobuf.text_format import PrintMessage
 from dateutil.parser import parse as ParseDate
 from dateutil.tz import tzutc
+from pymongo import MongoClient
 import zlib, datetime, sys
 
 def GetUnixTime(dt):
@@ -45,11 +46,25 @@ def CreateCommodityUpdate(data):
 
     return msg
 
+client = MongoClient()
+db = client.EliteDataArchive
+col_updates = db.updates
+col_commodities = db.station_commodities
+def InsertCommodityUpdate(data):
+    return col_updates.insert({
+        'timestamp': data.timestamp,
+        'payload': data.SerializeToString()
+    })
+
+def GetCommodityUpdatesSince(timestamp):
+    return [col_updates.find({'timestamp': {'$gt': timestamp}})]
+
 if __name__ == '__main__':
     eddn = EDDNClient()
 
     def write(x):
         m = CreateCommodityUpdate(x)
+        print InsertCommodityUpdate(m)
         print m
         print len(m.SerializeToString())
 
