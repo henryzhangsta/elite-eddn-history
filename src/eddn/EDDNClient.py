@@ -21,12 +21,15 @@ class EDDNClient(object):
                 if subscriber in socks and socks[subscriber] == zmq.POLLIN:
                     raw_data = subscriber.recv()
 
-                    if debug:
-                        debug(raw_data)
+                    try:
+                        if debug:
+                            debug(raw_data)
 
-                    market_json = zlib.decompress(raw_data)
-                    market_data = json.loads(market_json)
-                    callback(market_data)
+                        market_json = zlib.decompress(raw_data)
+                        market_data = json.loads(market_json)
+                        callback(market_data)
+                    except Exception as e:
+                        sys.stderr.write('%s\n', str(e))
 
         self.thread = threading.Thread(target=Worker)
         self.thread.daemon = True
