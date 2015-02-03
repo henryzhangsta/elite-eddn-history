@@ -28,6 +28,9 @@ class EDDNClient(object):
                     market_data = json.loads(market_json)
                     callback(market_data)
 
-        thread = threading.Thread(target=Worker)
-        thread.daemon = True
-        thread.start()
+        self.thread = threading.Thread(target=Worker)
+        self.thread.daemon = True
+        self.thread.start()
+
+    def Join(self, *args):
+        self.thread.join(*args)

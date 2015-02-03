@@ -84,8 +84,8 @@ if __name__ == '__main__':
 
     timestamp = 0
     while True:
-        line = raw_input()
         try:
+            line = raw_input()
             if len(line):
                 timestamp = int(line)
             
@@ -98,7 +98,13 @@ if __name__ == '__main__':
 
             if not len(line):
                 timestamp = GetCurrentUnixTime()
-
+        except EOFError as e:
+            while True:
+                try:
+                    eddn.Join(1)
+                except KeyboardInterrupt:
+                    print 'Exiting...'
+                    sys.exit(0)
         except Exception as e:
             print e
 
