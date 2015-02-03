@@ -1,4 +1,5 @@
 protobuf >= 2.6.1
+flask
 gevent
 pyzmq
 python-dateutil

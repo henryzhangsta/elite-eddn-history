@@ -3,28 +3,11 @@ from eddn import EDDNClient
 from schemas import ApplicationIdentifier, StationCommodities
 from google.protobuf.text_format import PrintMessage
 from dateutil.parser import parse as ParseDate
-from dateutil.tz import tzutc
-from pymongo import MongoClient
-from bson import Binary
-import zlib, datetime, sys, time
-
-def GetEpochUnixTime():
-    epoch = datetime.datetime.utcfromtimestamp(0)
-    epoch = epoch.replace(tzinfo=tzutc())
-    return epoch
-
-def GetCurrentUnixTime():
-    return int(time.time() * 1000.0)
-
-def GetUnixTime(dt):
-    epoch = GetEpochUnixTime()
-
-    if not dt.tzinfo:
-        dt = dt.replace(tzinfo=tzutc())
-    else:
-        dt = dt.astimezone(tzutc())
-    delta = dt - epoch
-    return int(delta.total_seconds() * 1000.0)
+from db import InsertCommodityUpdate, GetCommodityUpdatesSince
+from gevent.pywsgi import WSGIServer
+from utils.UnixTime import *
+import web
+import zlib, sys
 
 def CreateCommodityUpdate(data):
     header = data['header']
@@ -54,19 +37,6 @@ def CreateCommodityUpdate(data):
 
     return msg
 
-client = MongoClient()
-db = client.EliteDataArchive
-col_updates = db.updates
-col_commodities = db.station_commodities
-def InsertCommodityUpdate(data):
-    return col_updates.insert({
-        'timestamp': data.timestamp,
-        'payload': Binary(data.SerializeToString())
-    })
-
-def GetCommodityUpdatesSince(timestamp):
-    return [x['payload'] for x in col_updates.find({'timestamp': {'$gt': timestamp}})]
-
 if __name__ == '__main__':
     eddn = EDDNClient()
 
@@ -81,6 +51,8 @@ if __name__ == '__main__':
         print len(zlib.decompress(x))
 
     eddn.Listen(write, length)
+    httpserver = WSGIServer(('', 80), web.Server)
+    httpserver.serve_forever()
 
     timestamp = 0
     while True:
